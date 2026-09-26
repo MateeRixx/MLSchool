@@ -156,8 +156,11 @@ def process_s1_chunks(
             
             # Convert to Arrow and append
             table = chunk_df.to_arrow()
+            # Cast to consistent schema
+            table = table.cast(SCHEMA)
             # Read existing, concat, write
             existing = pq.read_table(output_path)
+            existing = existing.cast(SCHEMA)
             combined = pa.concat_tables([existing, table])
             pq.write_table(combined, output_path)
             total_candidates += len(chunk_df)
