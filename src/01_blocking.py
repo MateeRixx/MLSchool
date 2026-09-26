@@ -142,7 +142,9 @@ def process_s1_chunks(
                     ).with_columns(pl.lit(src_name).alias("candidate_source"))
                     
                     if len(joined) > 0:
-                        chunk_candidates.append(joined.rename({"entity_id": "source1_entity_id"}))
+                        # Drop the blocking key column before appending
+                        joined = joined.drop(key_col).rename({"entity_id": "source1_entity_id"})
+                        chunk_candidates.append(joined)
         
         if chunk_candidates:
             chunk_df = pl.concat(chunk_candidates).unique()
