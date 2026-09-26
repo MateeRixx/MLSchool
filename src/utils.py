@@ -213,6 +213,9 @@ def compute_blocking_recall(
 SEED = 42
 MAX_BUCKET_SIZE = 1000
 
+# Base data path (set at runtime for Kaggle/local)
+BASE_PATH = "/kaggle/input/datasets/summohith/amazon-ml-2026/student_resource"
+
 # Output directory
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)

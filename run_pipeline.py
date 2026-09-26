@@ -8,6 +8,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Import BASE_PATH from utils
+sys.path.insert(0, "src")
+from utils import BASE_PATH
+
 SCRIPTS = [
     ("Blocking", "src/01_blocking.py"),
     ("Features", "src/02_features.py"),
@@ -24,7 +28,7 @@ def run_script(name: str, script: str) -> bool:
     
     result = subprocess.run(
         [sys.executable, script],
-        capture_output=False,  # Stream output directly
+        capture_output=False,
         text=True,
     )
     
@@ -43,14 +47,15 @@ def main():
     print("="*60)
     
     # Check required files exist
+    base = Path(BASE_PATH)
     required = [
-        "dataset/train/train_source1.tsv",
-        "dataset/train/train_source2.tsv",
-        "dataset/train/train_source3.tsv",
-        "dataset/train/train_ground_truth.tsv",
-        "dataset/test/test_source1.tsv",
-        "dataset/test/test_source2.tsv",
-        "dataset/test/test_source3.tsv",
+        base / "dataset/train/train_source1.tsv",
+        base / "dataset/train/train_source2.tsv",
+        base / "dataset/train/train_source3.tsv",
+        base / "dataset/train/train_ground_truth.tsv",
+        base / "dataset/test/test_source1.tsv",
+        base / "dataset/test/test_source2.tsv",
+        base / "dataset/test/test_source3.tsv",
     ]
     
     missing = [f for f in required if not Path(f).exists()]

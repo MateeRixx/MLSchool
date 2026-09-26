@@ -20,11 +20,12 @@ from utils import (
     parse_matched_ids,
     normalize_source_lf,
     OUTPUT_DIR,
+    BASE_PATH,
 )
 
 # Paths
-TRAIN_DIR = Path("dataset/train")
-TEST_DIR = Path("dataset/test")
+TRAIN_DIR = Path(BASE_PATH + "/dataset/train")
+TEST_DIR = Path(BASE_PATH + "/dataset/test")
 
 CANDIDATES_TRAIN = OUTPUT_DIR / "candidate_pairs_train.parquet"
 CANDIDATES_TEST = OUTPUT_DIR / "candidate_pairs_test.parquet"
