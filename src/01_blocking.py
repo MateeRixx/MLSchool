@@ -12,34 +12,35 @@ import time
 import gc
 
 from utils import (
-    load_source_tsv,
+    load_source_parquet,
     load_ground_truth,
-    normalize_source_lf,
     compute_blocking_recall,
     BASE_PATH,
+    PROCESSED_BASE,
     OUTPUT_DIR,
 )
 
+PROCESSED_DIR = Path(PROCESSED_BASE)
 TRAIN_DIR = Path(BASE_PATH + "/dataset/train")
 TEST_DIR = Path(BASE_PATH + "/dataset/test")
 
-TRAIN_SOURCE1 = TRAIN_DIR / "train_source1.tsv"
-TRAIN_SOURCE2 = TRAIN_DIR / "train_source2.tsv"
-TRAIN_SOURCE3 = TRAIN_DIR / "train_source3.tsv"
+TRAIN_SOURCE1 = PROCESSED_DIR / "train_source1.parquet"
+TRAIN_SOURCE2 = PROCESSED_DIR / "train_source2.parquet"
+TRAIN_SOURCE3 = PROCESSED_DIR / "train_source3.parquet"
 TRAIN_GT = TRAIN_DIR / "train_ground_truth.tsv"
 
-TEST_SOURCE1 = TEST_DIR / "test_source1.tsv"
-TEST_SOURCE2 = TEST_DIR / "test_source2.tsv"
-TEST_SOURCE3 = TEST_DIR / "test_source3.tsv"
+TEST_SOURCE1 = PROCESSED_DIR / "test_source1.parquet"
+TEST_SOURCE2 = PROCESSED_DIR / "test_source2.parquet"
+TEST_SOURCE3 = PROCESSED_DIR / "test_source3.parquet"
 
 CANDIDATES_TRAIN_OUT = OUTPUT_DIR / "candidate_pairs_train.parquet"
 CANDIDATES_TEST_OUT = OUTPUT_DIR / "candidate_pairs_test.parquet"
 
 COUNTRIES = ["US", "India", "France"]
-BLOCKING_KEYS = ["name_first_2_tokens", "name_soundex", "zip_pin"]
-CHUNK_SIZE = 100000
-MAX_CANDIDATES_PER_S1 = 2000
-MAX_BUCKET_SIZE = 1000
+BLOCKING_KEYS = ["name_first_2_tokens", "zip_pin"]  # Removed phonetic - too broad
+CHUNK_SIZE = 20000
+MAX_CANDIDATES_PER_S1 = 50
+MAX_BUCKET_SIZE = 200
 
 SCHEMA = pa.schema([
     ("source1_entity_id", pa.string()),
@@ -55,8 +56,7 @@ def build_and_save_indexes(
     print("[Index] Building S2/S3 indexes...")
     
     for src_name, src_path in [("S2", s2_path), ("S3", s3_path)]:
-        lf = load_source_tsv(str(src_path))
-        lf = normalize_source_lf(lf)
+        lf = load_source_parquet(str(src_path))
         
         for country in COUNTRIES:
             lf_c = lf.filter(pl.col("country") == country)
@@ -96,8 +96,7 @@ def process_s1_chunks(
     """Process S1 in chunks, joining with pre-built indexes."""
     print(f"\n[Chunked Processing] S1: {s1_path}")
     
-    s1_lf = load_source_tsv(str(s1_path))
-    s1_lf = normalize_source_lf(s1_lf)
+    s1_lf = load_source_parquet(str(s1_path))
     s1_count = s1_lf.select(pl.len()).collect().item()
     print(f"  Total S1: {s1_count:,} | Chunk size: {CHUNK_SIZE}")
     
