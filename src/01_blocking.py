@@ -1,15 +1,15 @@
 """
-Blocking / Candidate Generation - Streaming Chunked Version
-Uses pre-built indexes + S1 chunking for memory efficiency.
+Blocking / Candidate Generation - Simple Robust Version
+Writes incrementally using pyarrow for guaranteed append.
 """
 
 import polars as pl
-import jellyfish
+import pyarrow.parquet as pq
+import pyarrow as pa
 from pathlib import Path
 from typing import List, Optional
 import time
 import gc
-import shutil
 
 from utils import (
     load_source_tsv,
@@ -18,7 +18,6 @@ from utils import (
     compute_blocking_recall,
     BASE_PATH,
     OUTPUT_DIR,
-    SEED,
 )
 
 TRAIN_DIR = Path(BASE_PATH + "/dataset/train")
@@ -38,13 +37,19 @@ CANDIDATES_TEST_OUT = OUTPUT_DIR / "candidate_pairs_test.parquet"
 
 COUNTRIES = ["US", "India", "France"]
 BLOCKING_KEYS = ["name_first_2_tokens", "name_soundex", "zip_pin"]
-CHUNK_SIZE = 50000
+CHUNK_SIZE = 100000
 MAX_CANDIDATES_PER_S1 = 2000
-MAX_BUCKET_SIZE = 500
+MAX_BUCKET_SIZE = 1000
+
+SCHEMA = pa.schema([
+    ("source1_entity_id", pa.string()),
+    ("candidate_entity_id", pa.string()),
+    ("candidate_source", pa.string()),
+])
 
 
 def build_and_save_indexes(
-    s2_path: Path, s3_path: Path, index_base: Path
+    s2_path: Path, s3_path: Path
 ):
     """Build and save S2/S3 indexes partitioned by country + key."""
     print("[Index] Building S2/S3 indexes...")
@@ -57,24 +62,21 @@ def build_and_save_indexes(
             lf_c = lf.filter(pl.col("country") == country)
             
             for key_col in BLOCKING_KEYS:
-                idx_dir = index_base / f"index_{src_name}_{country}_{key_col}"
+                idx_dir = OUTPUT_DIR / f"index_{src_name}_{country}_{key_col}"
                 if idx_dir.exists():
                     print(f"  Skipping existing: {idx_dir}")
                     continue
                 
                 print(f"  Building {src_name}/{country}/{key_col}...")
                 
-                # Extract key + entity_id
                 idx = lf_c.select(["entity_id", key_col]).filter(
                     pl.col(key_col).is_not_null() & (pl.col(key_col) != "")
                 )
                 
-                # Filter oversized buckets
                 counts = idx.group_by(key_col).agg(pl.len().alias("cnt"))
                 valid_keys = counts.filter(pl.col("cnt") <= MAX_BUCKET_SIZE).select(key_col)
                 idx = idx.join(valid_keys, on=key_col, how="inner")
                 
-                # Save
                 idx_dir.mkdir(parents=True, exist_ok=True)
                 idx.sink_parquet(idx_dir / "data.parquet")
                 
@@ -99,17 +101,19 @@ def process_s1_chunks(
     s1_count = s1_lf.select(pl.len()).collect().item()
     print(f"  Total S1: {s1_count:,} | Chunk size: {CHUNK_SIZE}")
     
-    # Clear output
+    # Create empty parquet file with schema
     if output_path.exists():
         output_path.unlink()
     
-    # Create empty file with schema if needed
-    schema = {
-        "source1_entity_id": pl.String,
-        "candidate_entity_id": pl.String,
-        "candidate_source": pl.String,
-    }
-    file_created = False
+    # Write empty table with schema
+    empty_table = pa.table({
+        "source1_entity_id": pa.array([], type=pa.string()),
+        "candidate_entity_id": pa.array([], type=pa.string()),
+        "candidate_source": pa.array([], type=pa.string()),
+    })
+    pq.write_table(empty_table, output_path)
+    
+    total_candidates = 0
     
     for chunk_start in range(0, s1_count, CHUNK_SIZE):
         chunk_end = min(chunk_start + CHUNK_SIZE, s1_count)
@@ -148,24 +152,16 @@ def process_s1_chunks(
                 pl.int_range(pl.len()).over("source1_entity_id").alias("rn")
             ).filter(pl.col("rn") < MAX_CANDIDATES_PER_S1).drop("rn")
             
-            # Write (create or append)
-            if not file_created:
-                chunk_df.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
-                file_created = True
-            else:
-                # Read existing, concat, write
-                existing = pl.read_parquet(output_path)
-                combined = pl.concat([existing, chunk_df]).unique()
-                combined.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
-                del existing
-            print(f"{len(chunk_df):,} candidates")
+            # Convert to Arrow and append
+            table = chunk_df.to_arrow()
+            # Read existing, concat, write
+            existing = pq.read_table(output_path)
+            combined = pa.concat_tables([existing, table])
+            pq.write_table(combined, output_path)
+            total_candidates += len(chunk_df)
+            print(f"{len(chunk_df):,} candidates (total: {total_candidates:,})")
         else:
             print("0 candidates")
-            # Create empty file with schema on first chunk if no candidates
-            if not file_created:
-                empty_df = pl.DataFrame(schema=schema)
-                empty_df.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
-                file_created = True
         
         del s1_chunk, chunk_candidates
         gc.collect()
@@ -215,10 +211,8 @@ def run_blocking(
     
     total_start = time.time()
     
-    index_base = OUTPUT_DIR / "blocking_indexes"
-    
     # Step 1: Build indexes (only once)
-    build_and_save_indexes(s2_path, s3_path, index_base)
+    build_and_save_indexes(s2_path, s3_path)
     
     # Step 2: Process S1 chunks
     candidates_df = process_s1_chunks(s1_path, output_path, is_train, gt_path)
