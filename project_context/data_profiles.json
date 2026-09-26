@@ -1,0 +1,250 @@
+{
+  "train": {
+    "train_source1": {
+      "name": "train_source1",
+      "filepath": "dataset\\train\\train_source1.tsv",
+      "row_count": 2206821,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 2206821,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 1539229,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 2130606,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 2,
+          "dtype": "String"
+        }
+      }
+    },
+    "train_source2": {
+      "name": "train_source2",
+      "filepath": "dataset\\train\\train_source2.tsv",
+      "row_count": 5034616,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 5034616,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 4402009,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 168967,
+          "null_pct": 3.3561050137686768,
+          "unique_count": 4337262,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 2,
+          "dtype": "String"
+        }
+      }
+    },
+    "train_source3": {
+      "name": "train_source3",
+      "filepath": "dataset\\train\\train_source3.tsv",
+      "row_count": 5285603,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 5285603,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 4651609,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 175916,
+          "null_pct": 3.3282106128666875,
+          "unique_count": 4632765,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 2,
+          "dtype": "String"
+        }
+      }
+    },
+    "train_ground_truth": {
+      "row_count": 2206821,
+      "singleton_count": 0,
+      "total_matched_refs": 7638365,
+      "unique_matched_ids": 7638365,
+      "match_count_stats": {
+        "min": 0,
+        "max": 11,
+        "avg_non_singleton": 3.66599170463828
+      },
+      "matched_source_dist": {
+        "S2": 3693619,
+        "S3": 3944746,
+        "S1": 0
+      }
+    }
+  },
+  "test": {
+    "test_source1": {
+      "name": "test_source1",
+      "filepath": "dataset\\test\\test_source1.tsv",
+      "row_count": 1732544,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 1732544,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 1238867,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 1677483,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 3,
+          "dtype": "String"
+        }
+      }
+    },
+    "test_source2": {
+      "name": "test_source2",
+      "filepath": "dataset\\test\\test_source2.tsv",
+      "row_count": 4887273,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 4887273,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 4311041,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 129408,
+          "null_pct": 2.647856995097266,
+          "unique_count": 4224784,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 3,
+          "dtype": "String"
+        }
+      }
+    },
+    "test_source3": {
+      "name": "test_source3",
+      "filepath": "dataset\\test\\test_source3.tsv",
+      "row_count": 5082316,
+      "col_count": 4,
+      "schema": {
+        "entity_id": "String",
+        "business_name": "String",
+        "business_address": "String",
+        "country": "String"
+      },
+      "column_stats": {
+        "entity_id": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 5082316,
+          "dtype": "String"
+        },
+        "business_name": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 4521929,
+          "dtype": "String"
+        },
+        "business_address": {
+          "null_count": 136098,
+          "null_pct": 2.6778736308407427,
+          "unique_count": 4456436,
+          "dtype": "String"
+        },
+        "country": {
+          "null_count": 0,
+          "null_pct": 0.0,
+          "unique_count": 3,
+          "dtype": "String"
+        }
+      }
+    }
+  }
+}
