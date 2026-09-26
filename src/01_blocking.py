@@ -103,6 +103,14 @@ def process_s1_chunks(
     if output_path.exists():
         output_path.unlink()
     
+    # Create empty file with schema if needed
+    schema = {
+        "source1_entity_id": pl.String,
+        "candidate_entity_id": pl.String,
+        "candidate_source": pl.String,
+    }
+    file_created = False
+    
     for chunk_start in range(0, s1_count, CHUNK_SIZE):
         chunk_end = min(chunk_start + CHUNK_SIZE, s1_count)
         print(f"  Chunk {chunk_start:,}-{chunk_end:,}...", end=" ", flush=True)
@@ -140,15 +148,24 @@ def process_s1_chunks(
                 pl.int_range(pl.len()).over("source1_entity_id").alias("rn")
             ).filter(pl.col("rn") < MAX_CANDIDATES_PER_S1).drop("rn")
             
-            # Append to output
-            chunk_df.write_parquet(
-                output_path,
-                pyarrow_options={"compression": "snappy"},
-                append=True if chunk_start > 0 else False
-            )
+            # Write (create or append)
+            if not file_created:
+                chunk_df.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
+                file_created = True
+            else:
+                # Read existing, concat, write
+                existing = pl.read_parquet(output_path)
+                combined = pl.concat([existing, chunk_df]).unique()
+                combined.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
+                del existing
             print(f"{len(chunk_df):,} candidates")
         else:
             print("0 candidates")
+            # Create empty file with schema on first chunk if no candidates
+            if not file_created:
+                empty_df = pl.DataFrame(schema=schema)
+                empty_df.write_parquet(output_path, pyarrow_options={"compression": "snappy"})
+                file_created = True
         
         del s1_chunk, chunk_candidates
         gc.collect()
