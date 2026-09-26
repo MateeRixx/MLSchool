@@ -153,6 +153,13 @@ def load_source_tsv(path: str, columns: List[str] = None) -> pl.LazyFrame:
     )
 
 
+def load_source_parquet(path: str) -> pl.LazyFrame:
+    """
+    Load a pre-processed parquet file (already normalized).
+    """
+    return pl.scan_parquet(path)
+
+
 def load_ground_truth(path: str) -> pl.DataFrame:
     """Load ground truth as DataFrame (small enough to fit in memory)."""
     return pl.read_csv(
@@ -213,8 +220,9 @@ def compute_blocking_recall(
 SEED = 42
 MAX_BUCKET_SIZE = 1000
 
-# Base data path (set at runtime for Kaggle/local)
+# Base data paths
 BASE_PATH = "/kaggle/input/datasets/summohith/amazon-ml-2026/student_resource"
+PROCESSED_BASE = "/kaggle/working/MLSchool/processed"
 
 # Output directory
 OUTPUT_DIR = Path("output")
